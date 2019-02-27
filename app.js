@@ -18,6 +18,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'views')));
+
+
+app.set('view engine', 'ejs');
 var productDetails =[];
 var products;
 
@@ -47,7 +50,80 @@ const acquireTokenWithClientCredentials = async (resource, clientId, clientSecre
   return response.data;
 }
 
+app.get('/productdetails/:id', async function(req, res, next) {
+    productDetailsId= [];
+    try {
+      var j = req.params.id;
 
+      const token = await acquireTokenWithClientCredentials(RESOURCE, CLIENT_APP_Id, CLIENT_SECRET, AUTHORITY);
+      // Calling workbench API
+      const response = await axios({
+        method: 'GET',
+        url: `${WORKBENCH_API_URL}/api/v1/contracts/${j}`,
+        headers: {'Authorization': `Bearer ${token.access_token}`},
+      });
+
+    var productDetailsIndividual = {};
+    products = response.data.contractProperties;
+
+    for(var i=0;i<products.length;i++){
+      if(products[i].workflowPropertyId == 70){
+
+        if (products[i].value === '0x1584b17ff1a97649284526e3906d62e169446b95'){
+
+          productDetailsIndividual.Manufacturer = "ASUS";
+        }
+        if (products[i]['value'] === '0x032f7fb389480308bcc5e952cd8a246dba48e112'){
+          productDetailsIndividual.Manufacturer = "Levis";
+        }
+        if (products[i].value === '0x909a4cb9eeba9533edc983d7492768ef77e8edd5'){
+          productDetailsIndividual.Manufacturer = "Reebok";
+        }
+      }
+      if(products[i].workflowPropertyId == 71){
+        productDetailsIndividual.Distributor = 'JMD Distributor';
+      }
+      if(products[i].workflowPropertyId == 72){
+        productDetailsIndividual.Retailer = 'Retail Net';
+      }
+      if(products[i].workflowPropertyId == 73){
+        productDetailsIndividual.ShipmentCompany = 'Ekart';
+      }
+      if(products[i].workflowPropertyId == 74){
+        productDetailsIndividual.SupplyChainObserver = 'Administrator';
+      }
+      if(products[i].workflowPropertyId == 76){
+        productDetailsIndividual.CompilanceDetail = products[i].value;
+      }
+      if(products[i].workflowPropertyId == 77){
+        productDetailsIndividual.ProductName = products[i].value;
+      }
+      if(products[i].workflowPropertyId == 78){
+        productDetailsIndividual.ProductCategory = products[i].value;
+      }
+      if(products[i].workflowPropertyId == 79){
+        productDetailsIndividual.ProductDetails = products[i].value;
+      }
+      if(products[i].workflowPropertyId == 80){
+        productDetailsIndividual.ProductQuantity = products[i].value;
+      }
+      if(products[i].workflowPropertyId == 81){
+        productDetailsIndividual.ProductImage = products[i].value;
+      }
+      if(products[i].workflowPropertyId == 82){
+        productDetailsIndividual.ProductPrice = products[i].value;
+      }
+
+    }
+    productDetailsId.push(productDetailsIndividual);
+
+  }
+  catch (err) {
+    console.error(err);
+  }
+
+    res.render('productdetailssingle', { productDetails : productDetailsId });
+  });
 //app.use('/', indexRouter);
 app.get('/',async function(req, res, next) {
     try {
@@ -63,12 +139,12 @@ app.get('/',async function(req, res, next) {
 
     var productDetailsIndividual = {};
     products = response.data.contractProperties;
-    console.log(products.length);
+    productDetailsIndividual.url = "/productdetails/"+j;
     for(var i=0;i<products.length;i++){
       if(products[i].workflowPropertyId == 70){
-        console.log("inside if");
+
         if (products[i].value === '0x1584b17ff1a97649284526e3906d62e169446b95'){
-          console.log("inisde asus");
+
           productDetailsIndividual.Manufacturer = "ASUS";
         }
         if (products[i]['value'] === '0x032f7fb389480308bcc5e952cd8a246dba48e112'){
@@ -123,12 +199,12 @@ app.get('/',async function(req, res, next) {
   catch (err) {
     console.error(err);
   }
-    console.log(productDetails);
+
     res.render('index', { productDetails : productDetails });
   });
 
-app.use('/users', usersRouter);
-app.set('view engine', 'ejs');
+
+
 
 
 
